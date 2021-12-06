@@ -9,8 +9,8 @@ ul {
 }
 
 img {
-  display: block;
   max-width: 100%;
+  display: inline-block;
 }
 
 .slide-wrapper {
@@ -26,5 +26,5 @@ img {
   width: 80vw;
   max-width: 800px;
   margin: 0 20px;
+  text-align: center;
 }
-
