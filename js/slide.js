@@ -60,9 +60,47 @@ export default class Slide {
     this.onEnd = this.onEnd.bind(this);
   }
 
+  slideImagePosition(element) {
+    const positionToCenter =
+      (window.innerWidth - element.offsetWidth) * 0.5 - element.offsetLeft;
+    return positionToCenter;
+    //Versão Origamid
+    // const margin = (this.wrapper.offsetWidth - li.offsetWidth) * 0.5;
+    // return margin - li.offsetLeft;
+  }
+
+  // slides config
+  slidesConfig() {
+    this.slideArray = [...this.slide.children].map((element) => {
+      const positionToCenter = this.slideImagePosition(element);
+      return {
+        element,
+        positionToCenter,
+      };
+    });
+  }
+
+  setActiveSlideInfo(index) {
+    const last = this.slideArray.length - 1;
+    this.activeSlideInfo = {
+      prev: index ? index - 1 : undefined,
+      active: index,
+      next: index === last ? undefined : index + 1,
+    };
+  }
+
+  changeSlide(index) {
+    const activeSlide = this.slideArray[index];
+    this.moveSlide(activeSlide.positionToCenter);
+    this.setActiveSlideInfo(index);
+    this.movement.currentX = activeSlide.positionToCenter;
+  }
+
   init() {
     this.bindEvents();
     this.addSlideEvents();
+    this.slidesConfig();
+
     return this;
   }
 }
