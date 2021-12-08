@@ -5,18 +5,26 @@ export default class Slide {
     this.movement = { currentX: 0, clickX: 0, finalX: 0 };
   }
 
+  // transição suave do slide
+  transition(active) {
+    this.slide.style.transition = active ? "transform .3s" : "";
+  }
+
   moveSlide(finalX) {
     this.slide.style.transform = `translate3d(${finalX}px, 0, 0)`;
     this.movement.finalX = finalX;
   }
 
+  // retorna a posição para onde o slide deve ser movido conforme o mouse é arrastado
   updatePosition(clientX) {
-    const finalX =
-      (clientX - this.movement.clickX) * 1.6 + this.movement.currentX; // * 1.6: apenas p/ acelerar o movimento
+    this.movement.displacement = clientX - this.movement.clickX;
+    // s = ds + s0
+    const finalX = this.movement.displacement * 1.6 + this.movement.currentX; // * 1.6: apenas p/ acelerar o movimento
     this.movement.finalX = finalX;
     return finalX;
   }
 
+  // ações disparadas quando o click inicia
   onStart(event) {
     let moveEventType;
 
@@ -30,8 +38,11 @@ export default class Slide {
     }
 
     this.wrapper.addEventListener(moveEventType, this.onMove);
+    this.transition(false); // remove transição suave, deve estar desabilitada durante o onMove
   }
 
+  // ações disparadas quando o mouse é arrastado
+  // durante o onMove, a transição deve estar desabilitada
   onMove(event) {
     const pointerX =
       event.type === "mousemove"
@@ -41,10 +52,31 @@ export default class Slide {
     this.moveSlide(finalX);
   }
 
+  // ações disparadas quando o click termina
   onEnd(event) {
     let moveEventType = event.type === "mouseup" ? "mousemove" : "touchmove";
     this.wrapper.removeEventListener(moveEventType, this.onMove);
     this.movement.currentX = this.movement.finalX;
+    this.transition(true); // ativa transição suave
+    this.changeSlideOnEnd();
+  }
+
+  // muda slide quando usuário arrasta imagem por mais de 120px
+  changeSlideOnEnd() {
+    if (
+      this.movement.displacement > 120 &&
+      this.activeSlideInfo.next !== undefined
+    ) {
+      this.activeNextSlide();
+    } else if (
+      this.movement.displacement < -120 &&
+      this.activeSlideInfo.prev !== undefined
+    ) {
+      this.activePrevSlide();
+    } else {
+      //centraliza a imagem atual caso o |arrasto| < 120 ou prev/next === undefined
+      this.changeSlide(this.activeSlideInfo.active);
+    }
   }
 
   addSlideEvents() {
@@ -54,6 +86,7 @@ export default class Slide {
     this.wrapper.addEventListener("touchend", this.onEnd);
   }
 
+  // configura o this dentro de certo métodos
   bindEvents() {
     this.onStart = this.onStart.bind(this);
     this.onMove = this.onMove.bind(this);
@@ -89,11 +122,22 @@ export default class Slide {
     };
   }
 
+  // move o slide para a imagem do index passado
   changeSlide(index) {
     const activeSlide = this.slideArray[index];
     this.moveSlide(activeSlide.positionToCenter);
     this.setActiveSlideInfo(index);
     this.movement.currentX = activeSlide.positionToCenter;
+  }
+
+  // move para o slide anterior, caso ele exista
+  activePrevSlide() {
+    if (this.activeSlideInfo.prev !== undefined)
+      this.changeSlide(this.activeSlideInfo.prev);
+  }
+  activeNextSlide() {
+    if (this.activeSlideInfo.next !== undefined)
+      this.changeSlide(this.activeSlideInfo.next);
   }
 
   init() {
