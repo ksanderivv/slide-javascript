@@ -1,8 +1,11 @@
+import debounce from "./debounce.js";
+
 export default class Slide {
   constructor(slide, wrapper) {
     this.slide = document.querySelector(slide);
     this.wrapper = document.querySelector(wrapper);
     this.movement = { currentX: 0, clickX: 0, finalX: 0 };
+    this.activeClass = "active";
   }
 
   // transição suave do slide
@@ -86,13 +89,6 @@ export default class Slide {
     this.wrapper.addEventListener("touchend", this.onEnd);
   }
 
-  // configura o this dentro de certo métodos
-  bindEvents() {
-    this.onStart = this.onStart.bind(this);
-    this.onMove = this.onMove.bind(this);
-    this.onEnd = this.onEnd.bind(this);
-  }
-
   slideImagePosition(element) {
     const positionToCenter =
       (window.innerWidth - element.offsetWidth) * 0.5 - element.offsetLeft;
@@ -102,7 +98,7 @@ export default class Slide {
     // return margin - li.offsetLeft;
   }
 
-  // slides config
+  // configura o slideArray: itens/posicionamento p/ centralizar
   slidesConfig() {
     this.slideArray = [...this.slide.children].map((element) => {
       const positionToCenter = this.slideImagePosition(element);
@@ -122,12 +118,23 @@ export default class Slide {
     };
   }
 
-  // move o slide para a imagem do index passado
+  // move o slide para a imagem do index passado no slideArray
   changeSlide(index) {
     const activeSlide = this.slideArray[index];
     this.moveSlide(activeSlide.positionToCenter);
     this.setActiveSlideInfo(index);
     this.movement.currentX = activeSlide.positionToCenter;
+    this.setActiveClass();
+  }
+
+  // coloca class active no li ativo no momento
+  setActiveClass() {
+    this.slideArray.forEach((slideItem) =>
+      slideItem.element.classList.remove(this.activeClass)
+    );
+    this.slideArray[this.activeSlideInfo.active].element.classList.add(
+      this.activeClass
+    );
   }
 
   // move para o slide anterior, caso ele exista
@@ -140,11 +147,35 @@ export default class Slide {
       this.changeSlide(this.activeSlideInfo.next);
   }
 
+  onResize() {
+    setTimeout(() => {
+      this.slidesConfig();
+      this.changeSlide(this.activeSlideInfo.active);
+    }, 1000); // o setTimeout é para esperar o usuário terminar de dar o resize p/ só então reconfigurar o slide
+    console.log("resize!");
+  }
+
+  // reconfigura o slide caso a tela seja redimensionada
+  addResizeEvent() {
+    window.addEventListener("resize", this.onResize);
+  }
+
+  // configura o this dentro de certo métodos
+  bindEvents() {
+    this.onStart = this.onStart.bind(this);
+    this.onMove = this.onMove.bind(this);
+    this.onEnd = this.onEnd.bind(this);
+
+    // espera 200ms p/ decidir se o usuário terminou o resize
+    // se o resize for redisparado antes de 200ms, onResize não será chamada
+    this.onResize = debounce(this.onResize.bind(this), 200);
+  }
+
   init() {
     this.bindEvents();
     this.addSlideEvents();
     this.slidesConfig();
-
+    this.addResizeEvent();
     return this;
   }
 }
