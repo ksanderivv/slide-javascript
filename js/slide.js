@@ -1,6 +1,6 @@
 import debounce from "./debounce.js";
 
-export default class Slide {
+export class Slide {
   constructor(slide, wrapper) {
     this.slide = document.querySelector(slide);
     this.wrapper = document.querySelector(wrapper);
@@ -152,7 +152,6 @@ export default class Slide {
       this.slidesConfig();
       this.changeSlide(this.activeSlideInfo.active);
     }, 1000); // o setTimeout é para esperar o usuário terminar de dar o resize p/ só então reconfigurar o slide
-    console.log("resize!");
   }
 
   // reconfigura o slide caso a tela seja redimensionada
@@ -169,6 +168,9 @@ export default class Slide {
     // espera 200ms p/ decidir se o usuário terminou o resize
     // se o resize for redisparado antes de 200ms, onResize não será chamada
     this.onResize = debounce(this.onResize.bind(this), 200);
+
+    this.activePrevSlide = this.activePrevSlide.bind(this);
+    this.activeNextSlide = this.activeNextSlide.bind(this);
   }
 
   init() {
@@ -176,6 +178,21 @@ export default class Slide {
     this.addSlideEvents();
     this.slidesConfig();
     this.addResizeEvent();
+    this.changeSlide(0);
+
     return this;
+  }
+}
+
+export class SlideNav extends Slide {
+  addArrow(prev, next) {
+    this.prevElement = document.querySelector(prev);
+    this.nextElement = document.querySelector(next);
+    this.addArrowEvent();
+  }
+
+  addArrowEvent() {
+    this.prevElement.addEventListener("click", this.activePrevSlide);
+    this.nextElement.addEventListener("click", this.activeNextSlide);
   }
 }
