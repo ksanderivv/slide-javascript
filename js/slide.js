@@ -201,7 +201,7 @@ export class Slide {
   }
 }
 
-export class SlideNav extends Slide {
+export default class SlideNav extends Slide {
   constructor(slide, wrapper) {
     super(slide, wrapper);
     this.bindControlEvents();
@@ -218,6 +218,7 @@ export class SlideNav extends Slide {
     this.nextElement.addEventListener("click", this.activeNextSlide);
   }
 
+  // cria um default control
   createControl() {
     const control = document.createElement("ul");
     control.dataset.control = "slide";
