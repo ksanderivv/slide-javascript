@@ -7,6 +7,7 @@ export class Slide {
     this.movement = { currentX: 0, clickX: 0, finalX: 0 };
     this.activeClass = "active";
     this.changeEvent = new Event("changeEvent");
+    this.changeByClickEvent = new Event("changeByClickEvent");
   }
 
   // transição suave do slide
@@ -30,19 +31,27 @@ export class Slide {
 
   // ações disparadas quando o click inicia
   onStart(event) {
-    let moveEventType;
-
-    if (event.type === "mousedown") {
-      event.preventDefault();
-      this.movement.clickX = event.clientX; // posição do click inicial
-      moveEventType = "mousemove";
+    let target = event.target.parentNode;
+    if (
+      target.tagName.toLowerCase() === "li" &&
+      ![...target.classList].includes("active")
+    ) {
+      this.transition(true);
+      target.dispatchEvent(this.changeByClickEvent);
     } else {
-      this.movement.clickX = event.changedTouches[0].clientX;
-      moveEventType = "touchmove";
-    }
+      let moveEventType;
+      if (event.type === "mousedown") {
+        event.preventDefault();
+        this.movement.clickX = event.clientX; // posição do click inicial
+        moveEventType = "mousemove";
+      } else {
+        this.movement.clickX = event.changedTouches[0].clientX;
+        moveEventType = "touchmove";
+      }
 
-    this.wrapper.addEventListener(moveEventType, this.onMove);
-    this.transition(false); // remove transição suave, deve estar desabilitada durante o onMove
+      this.wrapper.addEventListener(moveEventType, this.onMove);
+      this.transition(false); // remove transição suave, deve estar desabilitada durante o onMove
+    }
   }
 
   // ações disparadas quando o mouse é arrastado
@@ -89,6 +98,11 @@ export class Slide {
     this.wrapper.addEventListener("touchstart", this.onStart);
     this.wrapper.addEventListener("mouseup", this.onEnd);
     this.wrapper.addEventListener("touchend", this.onEnd);
+    this.slideArray.forEach((item, index) => {
+      item.element.addEventListener("changeByClickEvent", () => {
+        this.changeSlide(index);
+      });
+    });
   }
 
   slideImagePosition(element) {
@@ -178,8 +192,8 @@ export class Slide {
 
   init() {
     this.bindEvents();
-    this.addSlideEvents();
     this.slidesConfig();
+    this.addSlideEvents();
     this.addResizeEvent();
     this.changeSlide(0);
 
