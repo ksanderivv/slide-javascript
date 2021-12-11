@@ -36,7 +36,6 @@ export class Slide {
       target.tagName.toLowerCase() === "li" &&
       ![...target.classList].includes("active")
     ) {
-      this.transition(true);
       target.dispatchEvent(this.changeByClickEvent);
     } else {
       let moveEventType;
@@ -137,6 +136,7 @@ export class Slide {
   // move o slide para a imagem do index passado no slideArray
   changeSlide(index) {
     const activeSlide = this.slideArray[index];
+    this.transition(true);
     this.moveSlide(activeSlide.positionToCenter);
     this.setActiveSlideInfo(index);
     this.movement.currentX = activeSlide.positionToCenter;
